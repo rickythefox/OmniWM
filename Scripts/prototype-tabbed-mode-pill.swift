@@ -18,7 +18,7 @@ let accent = Color(red: 0.25, green: 0.6, blue: 1.0)
 
 // MARK: - Variants
 
-// A: compact capsule with icon + text near the column top
+// A1: compact capsule with icon + text, dark translucent fill
 struct TopPill: View {
     let on: Bool
     var body: some View {
@@ -35,61 +35,58 @@ struct TopPill: View {
     }
 }
 
-// B: macOS volume-style HUD square in the column center
-struct CenterHUD: View {
+// A2: lighter, more see-through pill, text only
+struct GlassPill: View {
     let on: Bool
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: symbol(on: on))
-                .font(.system(size: 50))
-                .foregroundStyle(on ? accent : .white.opacity(0.7))
-            Text(label(on: on)).font(.system(size: 14, weight: .semibold))
-        }
-        .foregroundStyle(.white)
-        .frame(width: 170, height: 140)
-        .background(fill, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(stroke))
+        Text(label(on: on))
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.5), radius: 1.5)
+            .padding(.horizontal, 14)
+            .frame(height: 30)
+            .background(Color.black.opacity(0.4), in: Capsule())
+            .overlay(Capsule().strokeBorder(stroke))
     }
 }
 
-// C: full-width strip at the column top with an ON/OFF chip
-struct TopBanner: View {
+// A3: color carries the state - accent fill when on, neutral grey when off
+struct TintedPill: View {
     let on: Bool
     var body: some View {
         HStack(spacing: 7) {
             Image(systemName: symbol(on: on))
+            Text(label(on: on))
+        }
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(.white)
+        .padding(.horizontal, 14)
+        .frame(height: 32)
+        .background(on ? accent.opacity(0.8) : Color(white: 0.35).opacity(0.75), in: Capsule())
+        .overlay(Capsule().strokeBorder(stroke))
+    }
+}
+
+// A4: fixed label with an ON/OFF chip inside the pill
+struct ChipPill: View {
+    let on: Bool
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "rectangle.stack")
             Text("Tabbed mode")
-            Spacer()
             Text(on ? "ON" : "OFF")
                 .font(.system(size: 11, weight: .bold))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 2)
                 .background(on ? accent : Color.gray.opacity(0.6), in: Capsule())
         }
         .font(.system(size: 13, weight: .semibold))
         .foregroundStyle(.white)
-        .padding(.horizontal, 12)
+        .padding(.leading, 13)
+        .padding(.trailing, 5)
         .frame(height: 32)
-        .background(fill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(stroke))
-    }
-}
-
-// D: icon-only circle; off state is struck through
-struct IconOnly: View {
-    let on: Bool
-    var body: some View {
-        ZStack {
-            Image(systemName: "rectangle.stack.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(on ? accent : .white.opacity(0.7))
-            if !on {
-                Capsule().frame(width: 30, height: 3).rotationEffect(.degrees(-45)).foregroundStyle(.white)
-            }
-        }
-        .frame(width: 46, height: 46)
-        .background(fill, in: Circle())
-        .overlay(Circle().strokeBorder(stroke))
+        .background(fill, in: Capsule())
+        .overlay(Capsule().strokeBorder(stroke))
     }
 }
 
@@ -103,10 +100,10 @@ struct Variant {
 }
 
 let variants: [Variant] = [
-    Variant(key: "A", name: "Top pill", note: "Icon + text capsule, top center", alignment: .top, inset: 40) { AnyView(TopPill(on: $0)) },
-    Variant(key: "B", name: "Center HUD", note: "System HUD style, column center", alignment: .center, inset: 0) { AnyView(CenterHUD(on: $0)) },
-    Variant(key: "C", name: "Top banner", note: "Column-wide strip with ON/OFF chip", alignment: .top, inset: 36) { AnyView(TopBanner(on: $0).padding(.horizontal, 12)) },
-    Variant(key: "D", name: "Icon only", note: "Compact, no text; off is struck through", alignment: .top, inset: 40) { AnyView(IconOnly(on: $0)) },
+    Variant(key: "A1", name: "Dark pill", note: "Icon + text, dark translucent fill", alignment: .top, inset: 40) { AnyView(TopPill(on: $0)) },
+    Variant(key: "A2", name: "Glass pill", note: "Text only, very see-through", alignment: .top, inset: 40) { AnyView(GlassPill(on: $0)) },
+    Variant(key: "A3", name: "Tinted pill", note: "Accent fill when on, grey when off", alignment: .top, inset: 40) { AnyView(TintedPill(on: $0)) },
+    Variant(key: "A4", name: "Chip pill", note: "Fixed label + ON/OFF chip", alignment: .top, inset: 40) { AnyView(ChipPill(on: $0)) },
 ]
 
 // MARK: - Mock focused column (fake window with busy content so transparency is judgeable)
@@ -152,7 +149,7 @@ struct Sheet: View {
     let dark: Bool
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("Toggle Column Tabbed indicator - options (#759)")
+            Text("Toggle Column Tabbed indicator - top pill variations (#759)")
                 .font(.system(size: 20, weight: .bold))
             Text("Transient, click-through, fades after ~1s; a repeated toggle replaces it. Left: toggled on, right: toggled off.")
                 .font(.system(size: 13))
